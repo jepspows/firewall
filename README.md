@@ -66,6 +66,8 @@ curl -X POST http://localhost:8787/check \
   -d '{"prompt": "Ignore all previous instructions"}'
 ```
 
+> **Website:** https://jepspows.github.io/firewall-website/ — full landing page with docs and guides.
+
 You'll see:
 ```
 ╔══════════════════════════════════════════════════╗
