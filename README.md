@@ -713,6 +713,16 @@ All v0.2.0 features shipped:
 
 ---
 
+## Star History
+
+<p align="center">
+  <a href="https://star-history.com/#jepspows/firewall&Date">
+    <img src="https://api.star-history.com/svg?repos=jepspows/firewall&type=Date" alt="Star History Chart" width="600" />
+  </a>
+</p>
+
+---
+
 ## License
 
 MIT
