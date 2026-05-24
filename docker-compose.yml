@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  firewall:
+    build: .
+    ports:
+      - "8787:8787"
+    environment:
+      - FIREWALL_HOST=0.0.0.0
+      - FIREWALL_PORT=8787
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8787/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
