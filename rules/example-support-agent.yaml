@@ -1,0 +1,48 @@
+# Example ruleset for a customer-support agent
+# Copy this to rules/<your-agent-id>.yaml and customize
+
+agent_id: "example-support-agent"
+threshold: 0.75
+
+# Only enable categories relevant to your threat model
+enabled_categories:
+  - system_override
+  - prompt_leaking
+  - delimiter_attack
+  - goal_hijacking
+  - token_smuggling
+  - data_exfiltration
+  - obfuscation
+  - multi_turn_attack
+
+# Disable categories you don't need
+disabled_categories: []
+
+# Custom patterns — add your own domain-specific rules
+custom_patterns:
+  - name: "ssn_leak_attempt"
+    category: "pii_protection"
+    pattern: "(?i)\\b\\d{3}-\\d{2}-\\d{4}\\b"
+    confidence: 0.90
+    explanation: "Attempt to extract SSN from agent"
+
+  - name: "credit_card_attempt"
+    category: "pii_protection"
+    pattern: "(?i)\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14})\\b"
+    confidence: 0.90
+    explanation: "Attempt to extract credit card numbers"
+
+  - name: "sql_injection_in_prompt"
+    category: "injection"
+    pattern: "(?i)(union\\s+select|drop\\s+table|--\\s*$|;\\s*select)"
+    confidence: 0.85
+    explanation: "SQL injection patterns in prompt"
+
+# Whitelist patterns — matching prompts bypass ALL checks
+whitelist_patterns:
+  - "^help$"
+  - "^status$"
+  - "^ping$"
+
+# Blacklist patterns — matching prompts are ALWAYS blocked
+blacklist_patterns: []
