@@ -141,7 +141,7 @@ class FeatureClassifier:
             return "token_smuggling"
         if any(k in t for k in ["send this", "encode the", "base64"]):
             return "data_exfiltration"
-        return "system_override"
+        return "benign"
 
 
 # ── ML Classifier (TF-IDF + Logistic Regression) ───────────────────
@@ -232,7 +232,7 @@ class EnsembleClassifier:
 
         # Feature-based prediction
         ft_proba = self.feature.predict_proba(text)
-        if ft_proba > 0.5:
+        if ft_proba > 0.55:
             ft_cat = self.feature.predict_category(text)
             detections.append(
                 Detection(

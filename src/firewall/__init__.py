@@ -7,4 +7,4 @@ classifying and blocking prompt injection attacks in real-time.
 Drop it in via env var, done.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
