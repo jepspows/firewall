@@ -284,24 +284,39 @@ CRITICAL  █                                         0.7%
 ```
 firewall/
 ├── src/firewall/
-│   ├── __init__.py      # Package metadata
-│   ├── classifier.py    # Core detection engine
-│   ├── models.py        # Pydantic data models
-│   └── server.py        # FastAPI server
+│   ├── __init__.py          # Package metadata
+│   ├── classifier.py        # Core rule-based detection engine
+│   ├── ml_classifier.py     # ML ensemble (TF-IDF + Feature)
+│   ├── models.py            # Pydantic data models
+│   ├── rulesets.py          # Per-agent YAML rulesets with hot-reload
+│   ├── websocket_handler.py # WebSocket: /ws/check, /ws/stream, /ws/dashboard
+│   ├── redis_stats.py       # Redis-backed shared state (optional)
+│   ├── prometheus_metrics.py# Prometheus /metrics endpoint
+│   ├── train.py             # ML model training script
+│   ├── dashboard.html       # Real-time attack dashboard UI
+│   ├── server.py            # FastAPI production server
+│   └── models/              # Trained ML model files
+├── rules/
+│   └── example-support-agent.yaml  # Example per-agent ruleset
 ├── examples/
 │   ├── basic_usage.py       # Simple classify-and-print
 │   ├── middleware_usage.py  # Python middleware guard
 │   └── http_client.py       # HTTP API client
 ├── tests/
-│   └── test_classifier.py   # Full test suite
+│   ├── test_classifier.py   # Original test suite (25 tests)
+│   └── test_v2_features.py  # v0.2.0 feature tests (20 tests)
 ├── docs/
 │   └── index.html           # Interactive docs dashboard
 ├── assets/
 │   └── logo.png             # Firewall logo
+├── pyproject.toml
 ├── requirements.txt
 ├── pytest.ini
 ├── .env.example
+├── .gitignore
 ├── docker-compose.yml
+├── Dockerfile
+├── LICENSE
 └── README.md
 ```
 
@@ -340,12 +355,12 @@ WantedBy=multi-user.target
 
 ## Roadmap
 
-- [ ] ML-based classifier (fine-tuned BERT for injection detection)
-- [ ] Per-agent custom rulesets
-- [ ] WebSocket support for streaming agents
-- [ ] Redis-backed shared state for multi-instance deployments
-- [ ] Prometheus metrics endpoint
-- [ ] Real-time attack dashboard
+- [x] ML-based classifier (fine-tuned BERT for injection detection) — TF-IDF + Logistic Regression + Feature ensemble
+- [x] Per-agent custom rulesets — YAML config, hot-reload, whitelist/blacklist/custom patterns
+- [x] WebSocket support for streaming agents — /ws/check, /ws/stream, /ws/dashboard
+- [x] Redis-backed shared state for multi-instance deployments — optional, graceful fallback
+- [x] Prometheus metrics endpoint — /metrics with counters, histograms, gauges
+- [x] Real-time attack dashboard — /dashboard with live WebSocket feed
 
 ## Contributing
 
