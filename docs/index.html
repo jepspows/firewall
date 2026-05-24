@@ -18,8 +18,8 @@
 <style>
   :root {
     --bg: #000000;
-    --bg2: #0a0a0a;
-    --bg3: #111111;
+    --bg2: rgba(10, 10, 10, 0.85);
+    --bg3: rgba(17, 17, 17, 0.9);
     --border: #1a1a1a;
     --text: #e0e0e0;
     --text2: #999999;
@@ -41,7 +41,11 @@
 
   body {
     font-family: var(--font);
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.15) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
+    background-position: 0 0;
     color: var(--text);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
@@ -51,7 +55,10 @@
 
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-    background: rgba(0,0,0,0.92);
+    background-color: rgba(0,0,0,0.94);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.08) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
     padding: 0 32px;
@@ -156,14 +163,18 @@
 
   .hero .terminal-preview {
     margin: 48px auto 0; max-width: 680px;
-    background: var(--bg3); border: 1px solid var(--border);
+    background-color: var(--bg2);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.06) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
+    border: 1px solid var(--border);
     border-radius: var(--radius); overflow: hidden;
     position: relative; z-index: 1;
     box-shadow: 0 4px 40px rgba(0,0,0,0.5);
   }
   .hero .terminal-preview .bar {
     display: flex; gap: 8px; padding: 14px 16px;
-    background: var(--bg2); border-bottom: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.5); border-bottom: 1px solid var(--border);
   }
   .hero .terminal-preview .bar .dot { width: 10px; height: 10px; border-radius: 50%; }
   .hero .terminal-preview .bar .dot.r { background: #ff5f56; }
@@ -172,6 +183,7 @@
   .hero .terminal-preview pre {
     padding: 20px; font-family: var(--mono); font-size: 0.82rem;
     line-height: 1.7; overflow-x: auto; color: var(--text2);
+    background: rgba(0, 0, 0, 0.3);
   }
   .hero .terminal-preview pre .cmd { color: var(--accent); }
   .hero .terminal-preview pre .out { color: var(--green); }
@@ -188,7 +200,11 @@
     gap: 16px; margin-top: 48px;
   }
   .threat-card {
-    background: var(--bg2); border: 1px solid var(--border);
+    background-color: var(--bg2);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.06) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
+    border: 1px solid var(--border);
     border-radius: var(--radius); padding: 28px;
     border-left: 3px solid var(--accent);
     transition: transform 0.2s, border-color 0.2s;
@@ -211,7 +227,12 @@
   }
   .pipeline-step {
     display: flex; gap: 24px; align-items: flex-start;
-    padding: 32px; background: var(--bg2); border: 1px solid var(--border);
+    padding: 32px;
+    background-color: var(--bg2);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.06) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
+    border: 1px solid var(--border);
     border-radius: var(--radius); margin-bottom: 12px;
     transition: border-color 0.2s;
   }
@@ -238,7 +259,11 @@
     gap: 16px; margin-top: 48px;
   }
   .feature-card {
-    background: var(--bg2); border: 1px solid var(--border);
+    background-color: var(--bg2);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.05) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
+    border: 1px solid var(--border);
     border-radius: var(--radius); padding: 32px; transition: all 0.2s;
   }
   .feature-card:hover { border-color: var(--accent); }
@@ -252,15 +277,25 @@
 
   /* ── Code Block ───────────────────────────────────────────── */
 
-  .code-section { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .code-section {
+    background-color: var(--bg2);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.04) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
   .code-section section { padding: 80px 32px; }
   .code-demo {
-    background: #050505; border: 1px solid var(--border);
+    background-color: var(--bg2);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.04) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
+    border: 1px solid var(--border);
     border-radius: var(--radius); overflow: hidden; margin-top: 32px;
   }
   .code-demo .tabs {
     display: flex; border-bottom: 1px solid var(--border);
-    background: var(--bg3);
+    background: rgba(0, 0, 0, 0.4);
   }
   .code-demo .tabs button {
     padding: 12px 20px; background: none; border: none; color: var(--text3);
@@ -286,7 +321,11 @@
     margin-top: 48px;
   }
   .stat-card {
-    background: var(--bg2); border: 1px solid var(--border);
+    background-color: var(--bg2);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.05) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
+    border: 1px solid var(--border);
     border-radius: var(--radius); padding: 28px; text-align: center;
   }
   .stat-card .value { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
@@ -326,6 +365,10 @@
   footer {
     border-top: 1px solid var(--border); padding: 48px 32px 32px;
     text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    background-image:
+      radial-gradient(circle at center, rgba(254, 165, 114, 0.06) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
   }
   footer .social-links { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; }
   footer .social-links a {
