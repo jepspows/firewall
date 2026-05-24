@@ -1,11 +1,7 @@
-"""
-Example 1: Basic usage — check a single prompt.
+"""Example 1: Basic usage — check a single prompt.
 
 Run: python examples/basic_usage.py
 """
-
-import sys
-sys.path.insert(0, "src")
 
 from firewall.classifier import PromptInjectionClassifier
 from firewall.models import CheckRequest

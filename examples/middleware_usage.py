@@ -1,11 +1,7 @@
-"""
-Example 2: Using Firewall as a Python middleware.
+"""Example 2: Using Firewall as a Python middleware.
 
 Drop this into any agent framework to add injection protection.
 """
-
-import sys
-sys.path.insert(0, "src")
 
 from firewall.classifier import PromptInjectionClassifier
 from firewall.models import CheckRequest
