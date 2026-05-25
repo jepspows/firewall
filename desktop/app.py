@@ -55,7 +55,21 @@ PORT = int(os.environ.get("FIREWALL_PORT", "8787"))
 DASHBOARD_URL = f"http://{HOST}:{PORT}/dashboard"
 
 logger = logging.getLogger("firewall-app")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
+
+# Log to a file in the user's home directory (works even in GUI mode with no console)
+_log_dir = Path(os.environ.get("FIREWALL_LOG_DIR", str(Path.home() / ".firewall")))
+_log_dir.mkdir(parents=True, exist_ok=True)
+_log_file = _log_dir / "firewall-desktop.log"
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    handlers=[
+        logging.FileHandler(str(_log_file)),
+        logging.StreamHandler(sys.stderr),
+    ],
+)
+logger.info(f"Firewall Desktop starting — log: {_log_file}")
 
 # ---------------------------------------------------------------------------
 # Server management — runs uvicorn in-process in a daemon thread
@@ -80,21 +94,35 @@ def server_is_running() -> bool:
 def start_server() -> bool:
     """Start the Firewall server in a daemon thread. Returns True if started."""
     global _server_thread, _uvicorn_server
+    
     with _lock:
         if server_is_running():
             logger.info("Server already running")
             return False
-
-        # Import here so the module path is already set up
-        from firewall.server import app
-
+    
+    # Import outside the lock — may take time in PyInstaller bundles
+    logger.info("Importing firewall.server...")
+    try:
+        from firewall.server import app as _firewall_app
+    except Exception:
+        logger.exception("Failed to import firewall.server")
+        return False
+    logger.info("firewall.server imported OK")
+    
+    logger.info("Creating uvicorn config...")
+    try:
         config = uvicorn.Config(
-            app,
+            _firewall_app,
             host=HOST,
             port=PORT,
             log_level="warning",
             access_log=False,
         )
+    except Exception:
+        logger.exception("Failed to create uvicorn config")
+        return False
+
+    with _lock:
         _uvicorn_server = uvicorn.Server(config)
 
         def _run_server():
@@ -103,14 +131,15 @@ def start_server() -> bool:
             try:
                 loop.run_until_complete(_uvicorn_server.serve())
             except Exception:
-                logger.exception("Server error")
+                logger.exception("Server runtime error")
             finally:
                 loop.close()
+                logger.info("Server thread exiting")
 
         _server_thread = threading.Thread(target=_run_server, daemon=True)
         _server_thread.start()
-        logger.info(f"Server starting on {HOST}:{PORT}")
-        return True
+    logger.info(f"Server thread started, binding to {HOST}:{PORT}")
+    return True
 
 
 def stop_server() -> bool:
@@ -226,27 +255,32 @@ def _make_icon_image():
 
 
 def _run_tray():
-    """Run the system tray loop. Blocks until quit."""
+    """Run the system tray loop. Blocks until quit.
+    
+    Falls back to headless mode if pystray isn't installed or can't
+    connect to a display (e.g., headless server, SSH session, CI).
+    """
     try:
         import pystray
         from pystray import Menu, MenuItem
     except ImportError:
-        logger.error(
-            "pystray not installed. Install with: pip install pystray pillow\n"
-            "Running in headless mode — the server will keep running until Ctrl+C."
-        )
+        logger.info("pystray not installed — running in headless mode")
         _headless_loop()
         return
 
     icon_img = _make_icon_image()
-    # Use a callable for the menu so it rebuilds each time
     icon = pystray.Icon(
         "firewall",
         icon_img,
         "Firewall — Prompt Injection Protection",
         menu=_build_tray_menu,
     )
-    icon.run()
+
+    try:
+        icon.run()
+    except Exception as e:
+        logger.warning(f"Tray icon failed ({e}) — falling back to headless mode")
+        _headless_loop()
 
 
 def _headless_loop():
@@ -277,20 +311,38 @@ def main():
         sys.path.insert(0, str(src_dir))
 
     # Start the server
+    logger.info("Starting server...")
     if not start_server():
         logger.warning("Could not start server")
+    else:
+        logger.info("Server start requested, waiting for boot...")
 
     # Give the server a moment to boot before opening the browser
     time.sleep(1.5)
 
+    # Check if server actually came up
+    if server_is_running():
+        logger.info(f"Server is running on {HOST}:{PORT}")
+    else:
+        logger.error("Server failed to start!")
+        # Keep going anyway — maybe it's just slow
+
     # Open dashboard in default browser
+    logger.info("Opening dashboard...")
     webbrowser.open(DASHBOARD_URL)
 
     # Run the tray icon — blocks until quit
+    logger.info("Starting tray icon...")
     _run_tray()
 
     logger.info("Firewall Desktop exiting.")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        logger.exception("Fatal error in main()")
+        # Keep the process alive briefly so logs can be read
+        import time
+        time.sleep(2)
