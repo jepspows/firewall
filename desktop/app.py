@@ -185,9 +185,8 @@ def _build_tray_menu():
             stop_server()
         else:
             start_server()
-        # Update the menu after toggling
-        if _tray_icon is not None:
-            _tray_icon.update_menu()
+        # Rebuild and refresh the menu
+        _rebuild_tray_menu()
 
     def _quit_app():
         stop_server()
@@ -234,12 +233,13 @@ def _run_tray():
         menu=_build_tray_menu(),
     )
 
-    # Override update_menu to rebuild from scratch each time
-    _orig_update = _tray_icon.update_menu
-    def _rebuild_menu():
+    # Store original update_menu for later use
+    _orig_update_menu = _tray_icon.update_menu
+
+    def _rebuild_tray_menu():
+        """Rebuild and refresh the tray menu (called after start/stop)."""
         _tray_icon.menu = _build_tray_menu()
-        _orig_update()
-    _tray_icon.update_menu = _rebuild_menu
+        _orig_update_menu()
 
     try:
         _tray_icon.run()
