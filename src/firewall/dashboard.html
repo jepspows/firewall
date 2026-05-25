@@ -6,41 +6,58 @@
 <title>Firewall — Live Attack Dashboard</title>
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --border: #1e1e2e;
-    --text: #e4e4e7;
-    --muted: #71717a;
-    --accent: #ff5c01;
+    --bg: #000000;
+    --bg2: rgba(10, 10, 10, 0.85);
+    --bg3: rgba(17, 17, 17, 0.9);
+    --border: #1a1a1a;
+    --text: #e0e0e0;
+    --text2: #999999;
+    --text3: #666666;
+    --accent: #e04000;
+    --accent-glow: rgba(224, 64, 0, 0.3);
+    --accent-dim: rgba(224, 64, 0, 0.1);
     --green: #22c55e;
     --red: #ef4444;
     --yellow: #eab308;
     --blue: #3b82f6;
     --purple: #8b5cf6;
-    --radius: 10px;
+    --radius: 12px;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: var(--bg);
+    font-family: var(--font);
+    background-color: #050000;
+    background-image:
+      linear-gradient(rgba(254, 165, 114, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(254, 165, 114, 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: 0 0;
     color: var(--text);
     min-height: 100vh;
-    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
+
+  /* ── Header ──────────────────────────────────────────────── */
   header {
-    background: var(--surface);
+    position: sticky; top: 0; z-index: 1000;
+    background-color: rgba(0,0,0,0.94);
+    background-image:
+      linear-gradient(rgba(254, 165, 114, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(254, 165, 114, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
-    padding: 12px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    padding: 0 32px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
   }
-  header .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; }
-  header .logo span { color: var(--accent); }
-  header .status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+  header .brand { display: flex; align-items: center; gap: 12px; }
+  header .brand img { height: 36px; width: 36px; border-radius: 8px; }
+  header .brand span { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.5px; }
+  header .brand span em { font-style: normal; color: var(--accent); }
+  header .status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text2); }
   .status-dot {
     width: 8px; height: 8px; border-radius: 50%;
     animation: pulse 2s infinite;
@@ -49,85 +66,125 @@
   .status-dot.offline { background: var(--red); animation: none; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
-  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  /* ── Container ───────────────────────────────────────────── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px; }
+
+  /* ── Stats Grid ──────────────────────────────────────────── */
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 768px) { .stats-row { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 480px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+
   .stat-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 20px; text-align: center; transition: transform 0.2s;
+    background-color: var(--bg2);
+    background-image:
+      linear-gradient(rgba(254, 165, 114, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(254, 165, 114, 0.035) 1px, transparent 1px);
+    background-size: 40px 40px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 16px; text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
   }
-  .stat-card:hover { transform: translateY(-2px); }
-  .stat-card .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
-  .stat-card .value { font-size: 2rem; font-weight: 800; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .stat-card .label { font-size: 0.65rem; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .stat-card .value { font-size: 2rem; font-weight: 900; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
   .stat-card .value.green { color: var(--green); }
   .stat-card .value.red { color: var(--red); }
   .stat-card .value.accent { color: var(--accent); }
-  .stat-card .value.blue { color: var(--blue); }
 
-  .panels { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+  /* ── Panels ──────────────────────────────────────────────── */
+  .panels { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 20px; }
   @media (max-width: 900px) { .panels { grid-template-columns: 1fr; } }
 
   .panel {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    background-color: var(--bg2);
+    background-image:
+      linear-gradient(rgba(254, 165, 114, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(254, 165, 114, 0.035) 1px, transparent 1px);
+    background-size: 40px 40px;
+    border: 1px solid var(--border); border-radius: var(--radius);
     overflow: hidden;
   }
   .panel-header {
     padding: 14px 20px; border-bottom: 1px solid var(--border);
-    font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+    font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px;
     display: flex; justify-content: space-between; align-items: center;
   }
   .panel-body { padding: 16px; }
 
-  /* Live feed */
-  .live-feed { max-height: 400px; overflow-y: auto; }
+  /* ── Live Feed ───────────────────────────────────────────── */
+  .live-feed { max-height: 420px; overflow-y: auto; }
+  .live-feed::-webkit-scrollbar { width: 4px; }
+  .live-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   .live-feed .entry {
     padding: 10px 14px; border-left: 3px solid var(--border); margin-bottom: 8px;
-    background: rgba(255,255,255,0.02); border-radius: 0 6px 6px 0;
+    background: rgba(0,0,0,0.3); border-radius: 0 8px 8px 0;
     animation: slideIn 0.3s ease;
   }
   @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
   .live-feed .entry.blocked { border-left-color: var(--red); }
   .live-feed .entry.allowed { border-left-color: var(--green); }
-  .live-feed .entry .ts { font-size: 0.65rem; color: var(--muted); }
-  .live-feed .entry .prompt { font-size: 0.8rem; margin: 4px 0; word-break: break-all; color: var(--text); }
-  .live-feed .entry .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .live-feed .entry .ts { font-size: 0.6rem; color: var(--text3); font-family: var(--mono); }
+  .live-feed .entry .prompt { font-size: 0.8rem; margin: 4px 0; word-break: break-all; color: var(--text); line-height: 1.4; }
+  .live-feed .entry .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
   .live-feed .entry .tag {
-    font-size: 0.6rem; padding: 2px 8px; border-radius: 4px;
-    text-transform: uppercase; letter-spacing: 0.5px;
-    background: rgba(255,92,1,0.15); color: var(--accent);
+    font-size: 0.6rem; padding: 2px 8px; border-radius: 100px;
+    text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+    background: var(--accent-dim); color: var(--accent);
   }
-  .live-feed .entry .tag.green { background: rgba(34,197,94,0.15); color: var(--green); }
-  .live-feed .entry .tag.red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .live-feed .entry .tag.green { background: rgba(34,197,94,0.12); color: var(--green); }
+  .live-feed .entry .tag.red { background: rgba(239,68,68,0.12); color: var(--red); }
 
-  /* Chart bars */
+  /* ── Category Bars ───────────────────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: 10px; }
   .bar-row { display: flex; align-items: center; gap: 10px; }
-  .bar-label { width: 130px; font-size: 0.75rem; text-align: right; flex-shrink: 0; color: var(--muted); }
-  .bar-track { flex: 1; background: var(--border); border-radius: 5px; height: 24px; overflow: hidden; position: relative; }
-  .bar-fill { height: 100%; border-radius: 5px; display: flex; align-items: center; padding-left: 10px; font-size: 0.7rem; font-weight: 600; transition: width 0.5s ease; }
-  .bar-fill.green { background: linear-gradient(90deg, #16a34a, #22c55e); }
-  .bar-fill.red { background: linear-gradient(90deg, #dc2626, #ef4444); }
-  .bar-fill.orange { background: linear-gradient(90deg, #ea580c, #f97316); }
-  .bar-fill.purple { background: linear-gradient(90deg, #7c3aed, #8b5cf6); }
-  .bar-fill.blue { background: linear-gradient(90deg, #2563eb, #3b82f6); }
-  .bar-fill.yellow { background: linear-gradient(90deg, #ca8a04, #eab308); }
+  .bar-label { width: 130px; font-size: 0.7rem; text-align: right; flex-shrink: 0; color: var(--text2); text-transform: capitalize; }
+  .bar-track { flex: 1; background: rgba(255,255,255,0.04); border-radius: 6px; height: 22px; overflow: hidden; }
+  .bar-fill {
+    height: 100%; border-radius: 6px; display: flex; align-items: center;
+    padding-left: 10px; font-size: 0.65rem; font-weight: 700; font-family: var(--mono);
+    transition: width 0.5s ease;
+  }
+  .bar-fill.green { background: var(--green); }
+  .bar-fill.red { background: var(--red); }
+  .bar-fill.orange { background: var(--accent); }
+  .bar-fill.purple { background: var(--purple); }
+  .bar-fill.blue { background: var(--blue); }
+  .bar-fill.yellow { background: var(--yellow); }
 
-  /* Block ratio gauge */
-  .gauge { position: relative; width: 160px; height: 160px; margin: 0 auto; }
+  /* ── Gauge ───────────────────────────────────────────────── */
+  .gauge-row { display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; }
+  .gauge { position: relative; width: 160px; height: 160px; }
   .gauge svg { transform: rotate(-90deg); }
-  .gauge .bg { fill: none; stroke: var(--border); stroke-width: 12; }
+  .gauge .bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 12; }
   .gauge .fg { fill: none; stroke: var(--green); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 1s ease, stroke 0.5s; }
   .gauge .center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
-  .gauge .center .pct { font-size: 1.8rem; font-weight: 800; }
-  .gauge .center .lbl { font-size: 0.65rem; color: var(--muted); }
+  .gauge .center .pct { font-size: 1.8rem; font-weight: 900; letter-spacing: -1px; }
+  .gauge .center .lbl { font-size: 0.6rem; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .legend { display: flex; flex-direction: column; gap: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+  .legend-dot.green { background: var(--green); }
+  .legend-dot.red { background: var(--red); }
 
-  /* Empty state */
-  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
+  /* ── Empty State ──────────────────────────────────────────── */
+  .empty { text-align: center; padding: 48px 20px; color: var(--text3); font-size: 0.85rem; }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  footer {
+    text-align: center; padding: 32px;
+    border-top: 1px solid var(--border); margin-top: 20px;
+    font-size: 0.75rem; color: var(--text3);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">fire<span>wall</span> — Live Attack Dashboard</div>
+  <div class="brand">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IArs4c6QAAA4VJREFUWEftl11IFFEcxn+zO+uupW1uqZkW+iFCZhgEUZJJERRFYRBBBEEEQRD0EUGfRRB9QQ99FEEf9FCERFD0UFRERFhEYWysu66r7TrO7sycemdndmfdrfYjaKHzUHBnzpxz/s//fM6ZE4Kmz/h2Ay0GLBawWMAXfBX0FNJ6AE0zafJ4OD1l5LVmPVs+E1Beyo1BcLLsNko5D8+0v0uot6oKlJQ2cUwBOvNL4bUsI7I6gXf0P9jeYKfyG3Cto1oFJbXcIXDW7uPNMpNokJEevcu20Yf0kf3wH0AdS7L7sfGAmZ4S+A7kjIJTuvdoz+4F5VWun1sOO0YL0uTtmQhNNCVVHJH8bQj8FtsPZf1E+iqG7R/iPyn0WlAz6T/HgRcD5o5EnDJidYFXjthKECDFBHo5lJ5CqoBECV5C8BwFHyNck4lSqE6AkpQtQflJjEBZwP1DsRkQHJAHJCV8CmRDpsFmgUNBAwMp34+BBgwRYRIWfgGvYITsBil7r+kJ6XflUUtQFJj+L7aEXBkIkGgiLNqBAWpW0kGyhQRAQJ2GAlhAYwxI5BBkSE9UQT0aAlLusHGOeMoBCxDRiIF3MqQiEIgE4+mg6lWHfwVEjvNXANNO/dD3yRxKBlGA0j4BnS2aMjVjmZzKWHNu9VkLpWYjybaQY4OnI64FQ+/ga2EMKODgQnF/lDv57i/s3hMNi/tvj9aF0/3/jtHkDvPtQHk0R8j3pz/ZdqJSnFb9QozBdDXnLtq58SuLHhvSl9HnprJ6WPoGcuMzg76W9OrK3erX6T63lILOx4t1eHqA3d64EfLdGRsX9o5QcXREUU8Vd1tSW7SqDALBneOj8D4E2sLUtivduTHLwzSwb20Y5eYur4YijKhAEkyBAKYAhQ/IdpBy3Kw0f1qBGnN7ayOpaFE+9Ej7+gFCNvsUEF/jThUmo0ot6jHU/bmI5F5flEEFBEaB32oKKRIo4kO/3W7uGcjHIKlUVmj1G4TSl5Jq0F6a2LYI4u5PgE+hRQDNfJpKJmOVqCUIs72bXZ/Gga9A+RmHtRt0sqV6VY3qhN82lCQsX0HBAqi01yFlIn5ECWoyI3D1+UvzKKrGwHSvvQNyH0oQmk7cKh+JjAgo7exh/+oEu9+oIWjKqW6/YAWo2AL14irQcVToCS/hWUBN5cLgxSLrz4gAo0FeAeZVwKECXJ82/oECOxKbmFpfGacAAAAASUVORK5CYII=" alt="Firewall" width="36" height="36" style="border-radius:8px">
+    <span>fire<em>wall</em></span>
+  </div>
   <div class="status">
     <div class="status-dot offline" id="status-dot"></div>
     <span id="status-text">Connecting...</span>
@@ -135,29 +192,28 @@
 </header>
 
 <div class="container">
-  <!-- Stats Grid -->
-  <div class="grid" id="stats-grid">
-    <div class="stat-card"><div class="label">Total Processed</div><div class="value accent" id="s-total">0</div></div>
+  <!-- Stats -->
+  <div class="stats-row" id="stats-grid">
+    <div class="stat-card"><div class="label">Processed</div><div class="value accent" id="s-total">0</div></div>
     <div class="stat-card"><div class="label">Allowed</div><div class="value green" id="s-allowed">0</div></div>
     <div class="stat-card"><div class="label">Blocked</div><div class="value red" id="s-blocked">0</div></div>
-    <div class="stat-card"><div class="label">Block Rate</div><div class="value blue" id="s-rate">0%</div></div>
+    <div class="stat-card"><div class="label">Block Rate</div><div class="value accent" id="s-rate">0%</div></div>
     <div class="stat-card"><div class="label">Avg Latency</div><div class="value accent" id="s-latency">0ms</div></div>
-    <div class="stat-card"><div class="label">Active WS</div><div class="value blue" id="s-active">0</div></div>
   </div>
 
   <div class="panels">
-    <!-- Live Attack Feed -->
+    <!-- Live Feed -->
     <div class="panel">
       <div class="panel-header">
         <span>Live Attack Feed</span>
-        <span style="font-size:0.7rem" id="feed-count">0 events</span>
+        <span style="font-size:0.65rem" id="feed-count">0 events</span>
       </div>
       <div class="live-feed" id="live-feed">
         <div class="empty">Waiting for events...</div>
       </div>
     </div>
 
-    <!-- Category Breakdown -->
+    <!-- Categories -->
     <div class="panel">
       <div class="panel-header">Detection Categories</div>
       <div class="panel-body">
@@ -168,33 +224,40 @@
     </div>
   </div>
 
-  <!-- Block Ratio Gauge -->
-  <div class="panel" style="margin-bottom:24px">
+  <!-- Gauge -->
+  <div class="panel">
     <div class="panel-header">Block / Allow Ratio</div>
-    <div class="panel-body" style="display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap">
-      <div class="gauge">
-        <svg width="160" height="160" viewBox="0 0 160 160">
-          <circle class="bg" cx="80" cy="80" r="70"/>
-          <circle class="fg" id="gauge-fg" cx="80" cy="80" r="70" stroke-dasharray="440" stroke-dashoffset="440"/>
-        </svg>
-        <div class="center">
-          <div class="pct" id="gauge-pct">0%</div>
-          <div class="lbl">block rate</div>
+    <div class="panel-body">
+      <div class="gauge-row">
+        <div class="gauge">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle class="bg" cx="80" cy="80" r="70"/>
+            <circle class="fg" id="gauge-fg" cx="80" cy="80" r="70" stroke-dasharray="440" stroke-dashoffset="440"/>
+          </svg>
+          <div class="center">
+            <div class="pct" id="gauge-pct">0%</div>
+            <div class="lbl">block rate</div>
+          </div>
         </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:14px;height:14px;background:var(--green);border-radius:3px"></div>
-          <span style="font-size:0.85rem">Allowed: <strong id="g-allowed">0</strong> (<span id="g-allowed-pct">0%</span>)</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:14px;height:14px;background:var(--red);border-radius:3px"></div>
-          <span style="font-size:0.85rem">Blocked: <strong id="g-blocked">0</strong> (<span id="g-blocked-pct">0%</span>)</span>
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-dot green"></div>
+            <span>Allowed: <strong id="g-allowed">0</strong> (<span id="g-allowed-pct">0%</span>)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot red"></div>
+            <span>Blocked: <strong id="g-blocked">0</strong> (<span id="g-blocked-pct">0%</span>)</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<footer>
+  <strong>Firewall</strong> &mdash; Prompt Injection Firewall for AI Agents &middot;
+  <a href="https://addfirewall.com" target="_blank" rel="noopener">addfirewall.com</a>
+</footer>
 
 <script>
 const WS_URL = `ws://${location.hostname}:8787/ws/dashboard`;
@@ -203,7 +266,7 @@ let stats = { total: 0, allowed: 0, blocked: 0, latency: 0, active: 0 };
 let categories = {};
 let events = [];
 const MAX_EVENTS = 50;
-const CAT_COLORS = ['green','red','orange','purple','blue','yellow'];
+const CAT_COLORS = ['red','orange','green','purple','blue','yellow'];
 
 function connect() {
   ws = new WebSocket(WS_URL);
@@ -259,7 +322,6 @@ function render() {
   const rate = stats.total > 0 ? (stats.blocked / stats.total * 100) : 0;
   document.getElementById('s-rate').textContent = rate.toFixed(1) + '%';
   document.getElementById('s-latency').textContent = stats.latency.toFixed(2) + 'ms';
-  document.getElementById('s-active').textContent = stats.active;
 
   // Gauge
   document.getElementById('gauge-pct').textContent = rate.toFixed(1) + '%';
@@ -279,14 +341,14 @@ function render() {
   if (events.length === 0) {
     feed.innerHTML = '<div class="empty">Waiting for events...</div>';
   } else {
-    feed.innerHTML = events.slice(0, 20).map((ev, i) => `
+    feed.innerHTML = events.slice(0, 20).map(ev => `
       <div class="entry ${ev.verdict === 'block' ? 'blocked' : 'allowed'}">
         <div class="ts">${new Date(ev.timestamp*1000).toLocaleTimeString()}</div>
         <div class="prompt">${esc(ev.prompt || '(no prompt)')}</div>
         <div class="tags">
           <span class="tag ${ev.verdict === 'block' ? 'red' : 'green'}">${ev.verdict.toUpperCase()}</span>
-          ${(ev.categories||[]).map((c,i) => `<span class="tag">${c}</span>`).join('')}
-          <span style="font-size:0.6rem;color:var(--muted)">${(ev.latency_ms||0).toFixed(2)}ms</span>
+          ${(ev.categories||[]).map(c => `<span class="tag">${c}</span>`).join('')}
+          <span style="font-size:0.6rem;color:var(--text3);font-family:var(--mono)">${(ev.latency_ms||0).toFixed(2)}ms</span>
         </div>
       </div>
     `).join('');
@@ -301,7 +363,7 @@ function render() {
     const maxVal = Math.max(...catEntries.map(e=>e[1]), 1);
     catDiv.innerHTML = catEntries.map(([name, count], i) => `
       <div class="bar-row">
-        <div class="bar-label">${name}</div>
+        <div class="bar-label">${name.replace(/_/g, ' ')}</div>
         <div class="bar-track">
           <div class="bar-fill ${CAT_COLORS[i%CAT_COLORS.length]}" style="width:${(count/maxVal*100).toFixed(0)}%">${count}</div>
         </div>
