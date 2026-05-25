@@ -729,6 +729,12 @@ MIT
 
 ---
 
+## Desktop App
+
+Download the standalone Firewall Desktop app — runs in your system tray, no terminal needed.
+
+**[Download for Mac & Windows →](https://addfirewall.com/download)**
+
 <p align="center">
   <strong>Firewall</strong> — Because your agent shouldn't trust anyone.<br>
   <a href="https://github.com/jepspows/firewall">github.com/jepspows/firewall</a>
