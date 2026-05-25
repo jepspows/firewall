@@ -27,15 +27,16 @@ Distribution:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
-import signal
-import subprocess
 import sys
 import threading
 import time
 import webbrowser
 from pathlib import Path
+
+import uvicorn
 
 # ---------------------------------------------------------------------------
 # Paths — when bundled by PyInstaller, sys._MEIPASS is the temp extract dir
@@ -49,7 +50,6 @@ def _base_dir() -> Path:
 
 
 BASE_DIR = _base_dir()
-SERVER_MODULE = "firewall.server"
 HOST = os.environ.get("FIREWALL_HOST", "127.0.0.1")
 PORT = int(os.environ.get("FIREWALL_PORT", "8787"))
 DASHBOARD_URL = f"http://{HOST}:{PORT}/dashboard"
@@ -58,78 +58,77 @@ logger = logging.getLogger("firewall-app")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 
 # ---------------------------------------------------------------------------
-# Server process management
+# Server management — runs uvicorn in-process in a daemon thread
 # ---------------------------------------------------------------------------
-# We run the server as a subprocess (not in-thread) so it gets proper signal
-# handling and clean shutdown. This also avoids thread-safety issues with the
-# async event loop.
+# We run uvicorn in the same process (not a subprocess) because:
+#   - PyInstaller bundles don't have a standalone Python interpreter;
+#     sys.executable is Firewall.exe, not python.
+#   - In-process avoids subprocess overhead, portability issues, and
+#     signal-handling complexity.
+# The server runs in a daemon thread with its own event loop.
 
-_server_process: subprocess.Popen[bytes] | None = None
+_server_thread: threading.Thread | None = None
+_uvicorn_server: uvicorn.Server | None = None
 _lock = threading.Lock()
 
 
 def server_is_running() -> bool:
     with _lock:
-        return _server_process is not None and _server_process.poll() is None
+        return _uvicorn_server is not None and _uvicorn_server.started
 
 
 def start_server() -> bool:
-    """Start the Firewall server as a subprocess. Returns True if started."""
-    global _server_process
+    """Start the Firewall server in a daemon thread. Returns True if started."""
+    global _server_thread, _uvicorn_server
     with _lock:
         if server_is_running():
             logger.info("Server already running")
             return False
 
-        cmd = [
-            sys.executable,
-            "-m",
-            "uvicorn",
-            f"{SERVER_MODULE}:app",
-            "--host", HOST,
-            "--port", str(PORT),
-            "--log-level", "warning",
-            "--no-access-log",
-        ]
-        # On Windows, CREATE_NO_WINDOW prevents a console window from appearing
-        creationflags = 0
-        if sys.platform == "win32":
-            creationflags = subprocess.CREATE_NO_WINDOW  # type: ignore[attr-defined]
+        # Import here so the module path is already set up
+        from firewall.server import app
 
-        _server_process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            creationflags=creationflags,
+        config = uvicorn.Config(
+            app,
+            host=HOST,
+            port=PORT,
+            log_level="warning",
+            access_log=False,
         )
-        logger.info(f"Server started (pid={_server_process.pid}) on {HOST}:{PORT}")
+        _uvicorn_server = uvicorn.Server(config)
+
+        def _run_server():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(_uvicorn_server.serve())
+            except Exception:
+                logger.exception("Server error")
+            finally:
+                loop.close()
+
+        _server_thread = threading.Thread(target=_run_server, daemon=True)
+        _server_thread.start()
+        logger.info(f"Server starting on {HOST}:{PORT}")
         return True
 
 
 def stop_server() -> bool:
     """Gracefully stop the server. Returns True if it was running."""
-    global _server_process
+    global _server_thread, _uvicorn_server
     with _lock:
-        if _server_process is None or _server_process.poll() is not None:
-            _server_process = None
+        if _uvicorn_server is None or not _uvicorn_server.started:
+            _uvicorn_server = None
+            _server_thread = None
             return False
 
-        pid = _server_process.pid
-        logger.info(f"Stopping server (pid={pid})...")
-        try:
-            if sys.platform == "win32":
-                _server_process.terminate()
-            else:
-                _server_process.send_signal(signal.SIGTERM)
-            _server_process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            logger.warning("Server didn't stop, force-killing...")
-            _server_process.kill()
-            _server_process.wait(timeout=3)
-        except Exception:
-            pass
+        logger.info("Stopping server...")
+        _uvicorn_server.should_exit = True
+        # Give the server a moment to drain
+        time.sleep(0.5)
 
-        _server_process = None
+        _uvicorn_server = None
+        _server_thread = None
         logger.info("Server stopped")
         return True
 
@@ -182,7 +181,7 @@ def _make_icon_image():
     We draw a 64x64 shield shape programmatically so there are no
     external image files to bundle.
     """
-    from PIL import Image, ImageDraw
+    from PIL import Image, ImageDraw, ImageFont
 
     size = 64
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
