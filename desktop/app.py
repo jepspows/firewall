@@ -50,6 +50,7 @@ def _base_dir() -> Path:
 
 
 BASE_DIR = _base_dir()
+DESKTOP = BASE_DIR / "desktop"
 HOST = os.environ.get("FIREWALL_HOST", "127.0.0.1")
 PORT = int(os.environ.get("FIREWALL_PORT", "8787"))
 DASHBOARD_URL = f"http://{HOST}:{PORT}/dashboard"
@@ -225,7 +226,7 @@ def _run_tray():
         _headless_loop()
         return
 
-    icon_img = _make_icon_image()
+    icon_img = _load_tray_icon()
     _tray_icon = pystray.Icon(
         "firewall",
         icon_img,
@@ -248,7 +249,36 @@ def _run_tray():
         _headless_loop()
 
 
-def _make_icon_image():
+def _load_tray_icon():
+    """Load the Firewall logo for the tray icon.
+    
+    Tries to load the bundled logo file first, falls back to
+    generating a shield icon programmatically.
+    """
+    from PIL import Image
+
+    # Try the bundled logo (included as data in PyInstaller builds)
+    if getattr(sys, "frozen", False):
+        logo_path = Path(sys._MEIPASS) / "icon.png"  # type: ignore[attr-defined]
+    else:
+        logo_path = DESKTOP / "icon.png"
+
+    if logo_path.exists():
+        try:
+            img = Image.open(logo_path)
+            # pystray works best with RGBA
+            if img.mode != "RGBA":
+                img = img.convert("RGBA")
+            logger.info("Loaded tray icon from logo")
+            return img
+        except Exception:
+            logger.warning("Failed to load logo, falling back to generated icon")
+
+    # Fallback: generate shield icon
+    return _make_shield_icon()
+
+
+def _make_shield_icon():
     """Generate a simple shield icon in-memory with Pillow."""
     from PIL import Image, ImageDraw, ImageFont
 

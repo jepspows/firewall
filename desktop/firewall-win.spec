@@ -33,6 +33,11 @@ dashboard_html = SRC / "firewall" / "dashboard.html"
 if dashboard_html.exists():
     added_files.append((str(dashboard_html), "firewall"))
 
+# Include logo for tray icon
+logo_png = DESKTOP / "icon.png"
+if logo_png.exists():
+    added_files.append((str(logo_png), "."))
+
 docs_dir = ROOT / "docs"
 if docs_dir.exists():
     added_files.append((str(docs_dir), "docs"))
