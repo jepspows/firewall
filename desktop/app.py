@@ -83,7 +83,7 @@ logger.info(f"Firewall Desktop starting — log: {_log_file}")
 
 _server_thread: threading.Thread | None = None
 _uvicorn_server: uvicorn.Server | None = None
-_lock = threading.Lock()
+_lock = threading.RLock()  # reentrant — server_is_running called inside locked blocks
 
 
 def server_is_running() -> bool:
