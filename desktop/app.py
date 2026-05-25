@@ -167,8 +167,8 @@ def stop_server() -> bool:
 # We try pystray first; fall back to a headless mode if not available.
 # ---------------------------------------------------------------------------
 
-def _build_tray_menu(tray_icon):
-    """Build the tray menu. Rebuilt each time the menu opens so status is live."""
+def _build_tray_menu():
+    """Build the tray menu. Returns a Menu instance (not a callable)."""
     try:
         from pystray import Menu, MenuItem
     except ImportError:
@@ -177,26 +177,30 @@ def _build_tray_menu(tray_icon):
     running = server_is_running()
     status_text = f"Server: {'ONLINE' if running else 'OFFLINE'}"
 
-    def _open_dashboard(icon, item):
+    def _open_dashboard():
         webbrowser.open(DASHBOARD_URL)
 
-    def _toggle_server(icon, item):
+    def _toggle_server():
         if server_is_running():
             stop_server()
         else:
             start_server()
-        # Rebuild menu on next click — pystray caches the menu, but
-        # we rebuild each time by using a callable.
+        # Update the menu after toggling
+        if _tray_icon is not None:
+            _tray_icon.update_menu()
 
-    def _quit_app(icon, item):
+    def _quit_app():
         stop_server()
-        icon.stop()
+        if _tray_icon is not None:
+            _tray_icon.stop()
+
+    action_label = "Start Server" if not running else "Stop Server"
 
     return Menu(
         MenuItem(status_text, None, enabled=False),
         Menu.SEPARATOR,
         MenuItem("Open Dashboard", _open_dashboard, default=True),
-        MenuItem("Start Server" if not running else "Stop Server", _toggle_server),
+        MenuItem(action_label, _toggle_server),
         Menu.SEPARATOR,
         MenuItem(f"Firewall v0.2.0 — Port {PORT}", None, enabled=False),
         Menu.SEPARATOR,
@@ -204,12 +208,48 @@ def _build_tray_menu(tray_icon):
     )
 
 
-def _make_icon_image():
-    """Generate a simple shield icon in-memory with Pillow.
+_tray_icon = None
 
-    We draw a 64x64 shield shape programmatically so there are no
-    external image files to bundle.
+
+def _run_tray():
+    """Run the system tray loop. Blocks until quit.
+    
+    Falls back to headless mode if pystray isn't installed or can't
+    connect to a display (e.g., headless server, SSH session, CI).
     """
+    global _tray_icon
+
+    try:
+        import pystray
+    except ImportError:
+        logger.info("pystray not installed — running in headless mode")
+        _headless_loop()
+        return
+
+    icon_img = _make_icon_image()
+    _tray_icon = pystray.Icon(
+        "firewall",
+        icon_img,
+        "Firewall — Prompt Injection Protection",
+        menu=_build_tray_menu(),
+    )
+
+    # Override update_menu to rebuild from scratch each time
+    _orig_update = _tray_icon.update_menu
+    def _rebuild_menu():
+        _tray_icon.menu = _build_tray_menu()
+        _orig_update()
+    _tray_icon.update_menu = _rebuild_menu
+
+    try:
+        _tray_icon.run()
+    except Exception as e:
+        logger.warning(f"Tray icon failed ({e}) — falling back to headless mode")
+        _headless_loop()
+
+
+def _make_icon_image():
+    """Generate a simple shield icon in-memory with Pillow."""
     from PIL import Image, ImageDraw, ImageFont
 
     size = 64
@@ -218,29 +258,15 @@ def _make_icon_image():
 
     # Shield shape
     shield_coords = [
-        (32, 4),   # top center
-        (56, 8),   # top right
-        (56, 28),  # right mid
-        (40, 52),  # bottom right
-        (32, 60),  # bottom point
-        (24, 52),  # bottom left
-        (8, 28),   # left mid
-        (8, 8),    # top left
+        (32, 4), (56, 8), (56, 28), (40, 52),
+        (32, 60), (24, 52), (8, 28), (8, 8),
     ]
-
-    # Shield fill — dark with gradient feel
     draw.polygon(shield_coords, fill=(30, 30, 40, 255), outline=(100, 200, 255, 255))
 
     # Inner shield
     inner = [
-        (32, 10),
-        (50, 14),
-        (50, 26),
-        (38, 45),
-        (32, 51),
-        (26, 45),
-        (14, 26),
-        (14, 14),
+        (32, 10), (50, 14), (50, 26), (38, 45),
+        (32, 51), (26, 45), (14, 26), (14, 14),
     ]
     draw.polygon(inner, fill=(20, 60, 120, 255), outline=(100, 200, 255, 200))
 
@@ -252,35 +278,6 @@ def _make_icon_image():
     draw.text((23, 22), "FW", fill=(255, 255, 255, 255), font=font)
 
     return img
-
-
-def _run_tray():
-    """Run the system tray loop. Blocks until quit.
-    
-    Falls back to headless mode if pystray isn't installed or can't
-    connect to a display (e.g., headless server, SSH session, CI).
-    """
-    try:
-        import pystray
-        from pystray import Menu, MenuItem
-    except ImportError:
-        logger.info("pystray not installed — running in headless mode")
-        _headless_loop()
-        return
-
-    icon_img = _make_icon_image()
-    icon = pystray.Icon(
-        "firewall",
-        icon_img,
-        "Firewall — Prompt Injection Protection",
-        menu=_build_tray_menu,
-    )
-
-    try:
-        icon.run()
-    except Exception as e:
-        logger.warning(f"Tray icon failed ({e}) — falling back to headless mode")
-        _headless_loop()
 
 
 def _headless_loop():
