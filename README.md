@@ -6,6 +6,16 @@
 <p align="center"><strong>Prompt Injection Firewall for AI Agents</strong></p>
 
 <p align="center">
+  <a href="https://pypi.org/project/firewall/"><img src="https://img.shields.io/pypi/v/firewall?color=CCFF00&style=flat-square" alt="PyPI version" /></a>
+  <a href="https://github.com/jepspows/firewall/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-CCFF00?style=flat-square" alt="License: MIT" /></a>
+  <a href="https://github.com/jepspows/firewall/stargazers"><img src="https://img.shields.io/github/stars/jepspows/firewall?color=CCFF00&style=flat-square" alt="GitHub stars" /></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11+-CCFF00?style=flat-square" alt="Python 3.11+" /></a>
+  <br>
+  <a href="https://addfirewall.com"><img src="https://img.shields.io/badge/website-addfirewall.com-CCFF00?style=flat-square" alt="Website" /></a>
+  <a href="https://addfirewall.com/download"><img src="https://img.shields.io/badge/download-desktop_app-CCFF00?style=flat-square" alt="Download Desktop App" /></a>
+</p>
+
+<p align="center">
   <em>Every deployed agent is vulnerable to prompt injection. Firewall is a lightweight, self-hostable proxy that sits between user input and your agent, classifying and blocking attacks in real-time. Sub-millisecond latency. Drop it in, done.</em>
 </p>
 
