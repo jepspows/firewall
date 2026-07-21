@@ -6,6 +6,10 @@
 <p align="center"><strong>Prompt Injection Firewall for AI Agents</strong></p>
 
 <p align="center">
+  <strong>CA:</strong> <code>0x1c7fc210bc988d37529d66e817c7ed696ba1426c</code>
+</p>
+
+<p align="center">
   <a href="https://pypi.org/project/firewall/"><img src="https://img.shields.io/pypi/v/firewall?color=CCFF00&style=flat-square" alt="PyPI version" /></a>
   <a href="https://github.com/jepspows/firewall/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-CCFF00?style=flat-square" alt="License: MIT" /></a>
   <a href="https://github.com/jepspows/firewall/stargazers"><img src="https://img.shields.io/github/stars/jepspows/firewall?color=CCFF00&style=flat-square" alt="GitHub stars" /></a>
