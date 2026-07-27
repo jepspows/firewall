@@ -6,7 +6,7 @@
 <p align="center"><strong>Prompt Injection Firewall for AI Agents</strong></p>
 
 <p align="center">
-  <strong>CA:</strong> <code>0x4436db1522395F78A8eA12De911e1f55c27489FB</code>
+  <strong>CA:</strong> <code>0x99afBd6a22C8590A2418E25aCb9122BE53457e8D</code>
 </p>
 
 <p align="center">
